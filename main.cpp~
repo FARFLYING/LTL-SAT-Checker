@@ -6,6 +6,8 @@
 #include <spot/tl/simplify.hh>
 #include "olg_check.h"
 
+
+
 int main()
 {
 	std::string input;
