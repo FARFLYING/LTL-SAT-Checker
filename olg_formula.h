@@ -10,7 +10,7 @@ class olg_formula{
 		//spot::formula _left;
 		//spot::formula _right;
 		
-		spot::formula olg;
+		spot::formula olgFormula;
 	public:
 		spot::op top_most;
 		olg_formula(spot::formula);
@@ -18,6 +18,8 @@ class olg_formula{
 		~olg_formula();
 		spot::formula build_olg_formula(spot::formula);
 		std::vector<std::string> split_formula(spot::formula);
+		bool unsat();
+		
 };
 
 #endif

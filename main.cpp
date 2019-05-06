@@ -15,7 +15,7 @@ int main()
 
 	spot::tl_simplifier simp;
 	//LTLformula=simp.simplify(LTLformula);
-	//print_psl(std::cout,LTLformula)<<"\n";
+	print_psl(std::cout,LTLformula)<<"\n";
 	
 	olg_check ch(LTLformula);
 	printf ("%s\n", ch.check () ? "sat" : "unsat");	
