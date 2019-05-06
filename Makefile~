@@ -5,6 +5,6 @@ main.o:main.cpp
 olg_check.o:olg_check.cpp
 	g++ -c olg_check.cpp -std=c++11 -lspot
 olg_formula.o:olg_formula.cpp
-	g++ -c olg_formula.cpp -std=c++11 -lspot
+    g++ -c olg_formula.cpp -std=c++11 -lspot
 .PHONY clean:
 	-rm -f *.o
