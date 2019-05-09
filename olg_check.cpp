@@ -18,5 +18,6 @@ bool olg_check::check(){
 		return false;
 	else{
         olg_formula olg(formula_check);
+		return olg.sat();
 	}
 }

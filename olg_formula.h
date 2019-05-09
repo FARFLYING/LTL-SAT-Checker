@@ -18,8 +18,10 @@ class olg_formula{
 		~olg_formula();
 		spot::formula build_olg_formula(spot::formula);
 		std::vector<std::string> split_formula(spot::formula);
-		bool unsat();
+		spot::formula convert_to_CNF(spot::formula);
+		bool sat();
 		
+
 };
 
 #endif

@@ -14,13 +14,16 @@ int main()
 	spot::formula LTLformula=spot::parse_formula(input);
 
 	spot::tl_simplifier simp;
-	//LTLformula=simp.simplify(LTLformula);
-	print_psl(std::cout,LTLformula)<<"\n";
+	LTLformula=simp.simplify(LTLformula);
+	print_psl(std::cout,LTLformula)<<"  --origin\n";
 	
 	olg_check ch(LTLformula);
-	printf ("%s\n", ch.check () ? "sat" : "unsat");	
+	//printf ("%s\n", ch.check () ? "sat" : "unsat");	
+	if(ch.check())
+		std::cout<<"sat"<<"\n";
+	else
+		std::cout<<"unsat"<<"\n";
 	
-
 	return 0;
 }
 

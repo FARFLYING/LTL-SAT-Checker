@@ -18,6 +18,10 @@ class olg_formula{
 		~olg_formula();
 		spot::formula build_olg_formula(spot::formula);
 		std::vector<std::string> split_formula(spot::formula);
+		bool sat();
+		bool unsat();
+		
+
 };
 
 #endif

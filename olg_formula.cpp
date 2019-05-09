@@ -15,8 +15,8 @@ olg_formula::olg_formula(spot::formula input){
 	//cout<<"top_most:"<<input.kindstr().c_str()<<endl;
 	
 	olgFormula=build_olg_formula(input);
-	print_psl(std::cout,input)<<"\n";
-	print_psl(std::cout,olgFormula)<<"\n";
+	//print_psl(std::cout,input)<<"\n";
+	print_psl(std::cout,olgFormula)<<"  --olg\n";
 }
 
 olg_formula::~olg_formula(){
@@ -59,24 +59,91 @@ spot::formula olg_formula::build_olg_formula(spot::formula toBuild){
 	}
 	return olg;
 
+}
 
-	//vector<string> str_subformula=split_formula(toBuild);
-	/*cout<<str_subformula.size()<<"\n";
-	for (vector<string>::iterator iter = str_subformula.begin(); iter < str_subformula.end(); iter++)
-    	{
-        	//输出*iter才是输出那些字符串
-       		cout <<"("<< *iter<<")" << endl;
-    	}
-	*/
+spot::formula olg_formula::convert_to_CNF(spot::formula toConvert){
+	if(toConvert.kind()==spot::op::ap)
+		return toConvert;
+	else if(toConvert.kind()==spot::op::And){
+		vector<spot::formula> sub;
+		for(int i=0;i<toConvert.size();i++){
+			sub.push_back(convert_to_CNF(toConvert.operator[](i)));
+		}
+		return spot::formula::And(sub);
+	}
+	else if(toConvert.kind()==spot::op::Or){
+		bool is_all_literal=true;
+		for(int i=0;i<toConvert.size();i++){
+			if(!toConvert.operator[](i).is_literal()){
+				is_all_literal=false;
+				break;			
+			}
+		}
+		if(is_all_literal)
+			return toConvert;
+
+		spot::formula p=convert_to_CNF(toConvert.operator[](0)); print_psl(std::cout,p)<<"  --convert_p\n";
+		spot::formula q=convert_to_CNF(toConvert.all_but(0));   print_psl(std::cout,q)<<"  --convert_q\n";
+		vector<spot::formula> sub,temp;
+		for(int i=0;i<p.size();i++){
+			for(int j=0;j<q.size();j++){
+				temp.clear();
+				//print_psl(std::cout,p.operator[](i))<<"  --p_child_"<<i<<"\n";
+				temp.push_back(p.operator[](i)); 
+				//print_psl(std::cout,q)<<"  --q_child_"<<j<<"\n";  
+				temp.push_back(q.operator[](j));   
+				sub.push_back(/*spot::formula tag=*/spot::formula::Or(temp)); 
+				//print_psl(std::cout,tag)<<"  --or_temp"<<"\n";  
+			}
+		}
+		return spot::formula::And(sub);
+	}
+	else if(toConvert.kind()==spot::op::Not){
+		if(toConvert.is_literal())
+			return toConvert;
+		else{
+			spot::formula child_of_Not=toConvert.get_child_of(spot::op::Not);
+			if(child_of_Not.kind()==spot::op::Not)
+				return convert_to_CNF(child_of_Not.get_child_of(spot::op::Not));
+			else if(child_of_Not.kind()==spot::op::And){
+				spot::formula p=spot::formula::Not(child_of_Not.operator[](0));
+				spot::formula q=spot::formula::Not(child_of_Not.all_but(0));
+				vector<spot::formula> temp;
+				temp.push_back(p);
+				temp.push_back(q);
+				return convert_to_CNF(spot::formula::Or(temp));
+			}
+			else if(child_of_Not.kind()==spot::op::Or){
+				spot::formula p=spot::formula::Not(child_of_Not.operator[](0));
+				spot::formula q=spot::formula::Not(child_of_Not.all_but(0));
+				vector<spot::formula> temp;
+				temp.push_back(p);
+				temp.push_back(q);
+				return convert_to_CNF(spot::formula::And(temp));			
+			}
+		}
+	}
 	
 }
 
+bool olg_formula::sat(){
+	if(top_most==spot::op::tt)
+		return true;
+	if(top_most==spot::op::ff)
+		return false;
+	//Minisat::Solver S;
+	spot::formula CNFformat=convert_to_CNF(olgFormula);
+	print_psl(std::cout,CNFformat)<<"  --CNF\n";
+	return false;
+}
+
+/*
 bool olg_formula::unsat(){
 	if(top_most==spot::op::ff)
 		return true;
 	else if(top_most==spot::op::tt)
 		return false;
-}
+}*/
 
 vector<std::string> olg_formula::split_formula(spot::formula toSplit){
 	vector<std::string> result;
