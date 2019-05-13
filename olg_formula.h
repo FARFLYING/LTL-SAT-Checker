@@ -9,7 +9,6 @@ class olg_formula{
 	private:
 		//spot::formula _left;
 		//spot::formula _right;
-		
 		spot::formula olgFormula;
 	public:
 		spot::op top_most;
@@ -19,6 +18,8 @@ class olg_formula{
 		spot::formula build_olg_formula(spot::formula);
 		std::vector<std::string> split_formula(spot::formula);
 		spot::formula convert_to_CNF(spot::formula);
+		void get_all_apName(spot::formula);
+		void write_dimacs(sopt::formula);
 		bool sat();
 		
 

@@ -82,8 +82,8 @@ spot::formula olg_formula::convert_to_CNF(spot::formula toConvert){
 		if(is_all_literal)
 			return toConvert;
 
-		spot::formula p=convert_to_CNF(toConvert.operator[](0)); print_psl(std::cout,p)<<"  --convert_p\n";
-		spot::formula q=convert_to_CNF(toConvert.all_but(0));   print_psl(std::cout,q)<<"  --convert_q\n";
+		spot::formula p=convert_to_CNF(toConvert.operator[](0)); //print_psl(std::cout,p)<<"  --convert_p\n";
+		spot::formula q=convert_to_CNF(toConvert.all_but(0));   //print_psl(std::cout,q)<<"  --convert_q\n";
 		vector<spot::formula> sub,temp;
 		for(int i=0;i<p.size();i++){
 			for(int j=0;j<q.size();j++){
@@ -92,8 +92,8 @@ spot::formula olg_formula::convert_to_CNF(spot::formula toConvert){
 				temp.push_back(p.operator[](i)); 
 				//print_psl(std::cout,q)<<"  --q_child_"<<j<<"\n";  
 				temp.push_back(q.operator[](j));   
-				sub.push_back(/*spot::formula tag=*/spot::formula::Or(temp)); 
-				//print_psl(std::cout,tag)<<"  --or_temp"<<"\n";  
+				sub.push_back(spot::formula::Or(temp)); 
+				//print_psl(std::cout,spot::formula::Or(temp))<<"  --or_temp"<<"\n";  
 			}
 		}
 		return spot::formula::And(sub);
@@ -124,6 +124,39 @@ spot::formula olg_formula::convert_to_CNF(spot::formula toConvert){
 		}
 	}
 	
+}
+
+static vector<string> all_apName;
+void olg_formula::get_all_apName(spot::formula toGet){
+	if(toGet.kind()==spot::op::ap){
+		if(find(all_apName.begin(),all_apName.end(),toGet.ap_name())==all_apName.end()){
+			all_apName.push_back(toGet.ap_name());
+		}	
+		return;
+	}
+	for(int i=0;i<toGet.size();i++){
+		get_all_apName(toGet.operator[](i));
+	}
+}
+
+void olg_formula::write_dimacs(sopt::formula toWrite){
+	ofstream in;
+	in.open("cnf.dimacs",ios::trunc);
+	int valNum,clNum;
+
+	clNum=toWrite.size();
+
+	get_all_apName(toWrite);
+	valNum=all_apName.size();
+
+	string ap[valNum];
+	vector<string>::iterator iter;
+	int i;
+	for (iter=all_apName.begin(),i=0;iter!=all_apName.end();iter++,i++)
+	{
+		ap[i]=*lter;
+	}
+
 }
 
 bool olg_formula::sat(){
