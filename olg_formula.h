@@ -19,7 +19,7 @@ class olg_formula{
 		std::vector<std::string> split_formula(spot::formula);
 		spot::formula convert_to_CNF(spot::formula);
 		void get_all_apName(spot::formula);
-		void write_dimacs(sopt::formula);
+		void write_dimacs(spot::formula);
 		bool sat();
 		
 

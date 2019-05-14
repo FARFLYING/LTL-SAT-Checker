@@ -2,6 +2,10 @@
 #include <string>
 #include <spot/tl/formula.hh>		
 #include <spot/tl/print.hh>
+#include <algorithm>
+#include <fstream>
+#include <vector>
+#include <cstdlib>
 #include "olg_formula.h"
 using namespace std;
 
@@ -139,12 +143,23 @@ void olg_formula::get_all_apName(spot::formula toGet){
 	}
 }
 
-void olg_formula::write_dimacs(sopt::formula toWrite){
-	ofstream in;
-	in.open("cnf.dimacs",ios::trunc);
+int flagNum(string ap[],string t,int n){
+	int i;
+	for(i=0;i<n;i++){
+		if(ap[i]==t)
+			break;
+	}
+	return i+1;
+}
+
+void olg_formula::write_dimacs(spot::formula toWrite){
 	int valNum,clNum;
 
-	clNum=toWrite.size();
+	if(toWrite.kind()==spot::op::ap | toWrite.kind()==spot::op::Not | toWrite.kind()==spot::op::Or)
+		clNum=1;
+	else{
+		clNum=toWrite.size();
+	}
 
 	get_all_apName(toWrite);
 	valNum=all_apName.size();
@@ -154,8 +169,64 @@ void olg_formula::write_dimacs(sopt::formula toWrite){
 	int i;
 	for (iter=all_apName.begin(),i=0;iter!=all_apName.end();iter++,i++)
 	{
-		ap[i]=*lter;
+		ap[i]=*iter;
 	}
+
+	ofstream in;
+	in.open("cnf.dimacs",ios::trunc);
+
+	in<<"p cnf "<<valNum<<" "<<clNum<<"\n";
+	
+
+	if(toWrite.kind()==spot::op::ap){
+		int flag=flagNum(ap,toWrite.ap_name(),valNum);
+		in<<flag<<" "<<"0"<<"\n";
+	}
+	else if(toWrite.kind()==spot::op::Not){
+		int flag=flagNum(ap,toWrite.get_child_of(spot::op::Not).ap_name(),valNum);
+		in<<"-"<<flag<<" "<<"0"<<"\n";		
+	}
+	else if(toWrite.kind()==spot::op::Or){
+		for(i=0;i<toWrite.size();i++){
+			if(toWrite.operator[](i).kind()==spot::op::ap){
+				int flag=flagNum(ap,toWrite.operator[](i).ap_name(),valNum);
+				in<<flag<<" ";			
+			}
+			else if(toWrite.operator[](i).kind()==spot::op::Not){
+				int flag=flagNum(ap,toWrite.operator[](i).get_child_of(spot::op::Not).ap_name(),valNum);
+				in<<"-"<<flag<<" ";			
+			}		
+		}
+		in<<"0"<<"\n";
+	}
+	else{
+		for(i=0;i<toWrite.size();i++){
+			spot::formula temp=toWrite.operator[](i);
+			if(temp.kind()==spot::op::ap){
+					int flag=flagNum(ap,temp.ap_name(),valNum);
+					in<<flag<<" "<<"0"<<"\n";
+			}
+			else if(temp.kind()==spot::op::Not){
+				int flag=flagNum(ap,temp.get_child_of(spot::op::Not).ap_name(),valNum);
+				in<<"-"<<flag<<" "<<"0"<<"\n";	
+			}
+			else{
+			for(int j=0;j<temp.size();j++){
+				if(temp.operator[](j).kind()==spot::op::ap){
+					int flag=flagNum(ap,temp.operator[](j).ap_name(),valNum);
+					in<<flag<<" ";			
+				}
+				else if(temp.operator[](j).kind()==spot::op::Not){
+					int flag=flagNum(ap,temp.operator[](j).get_child_of(spot::op::Not).ap_name(),valNum);
+					in<<"-"<<flag<<" ";			
+				}		
+			}
+			in<<"0"<<"\n";
+			}
+		}
+	}
+	
+	in.close();
 
 }
 
@@ -167,6 +238,14 @@ bool olg_formula::sat(){
 	//Minisat::Solver S;
 	spot::formula CNFformat=convert_to_CNF(olgFormula);
 	print_psl(std::cout,CNFformat)<<"  --CNF\n";
+	write_dimacs(CNFformat);
+	system("minisat cnf.dimacs out");
+	char buffer[100];
+	ifstream in("out");
+	in.getline(buffer,100);
+	string result=buffer;
+	if(result=="SAT")
+		return true;
 	return false;
 }
 
