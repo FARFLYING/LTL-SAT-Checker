@@ -18,11 +18,12 @@ int main()
 	print_psl(std::cout,LTLformula)<<"  --origin\n";
 	
 	olg_check ch(LTLformula);
-	//printf ("%s\n", ch.check () ? "sat" : "unsat");	
-	if(ch.check())
+	printf ("%s\n", ch.check () ? "sat" : "unsat");	
+	/*bool is_sat=ch.check(); std::cout<<"5\n";
+	if(is_sat) 
 		std::cout<<"sat"<<"\n";
 	else
-		std::cout<<"unsat"<<"\n";
+		std::cout<<"unsat"<<"\n";*/
 	
 	return 0;
 }

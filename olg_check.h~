@@ -10,6 +10,7 @@ class olg_check{
 		olg_check(spot::formula);
 		~olg_check();
 		bool check();
+		spot::formula clone(spot::formula);
 		spot::formula formula_check;
 };
 

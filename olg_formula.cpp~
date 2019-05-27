@@ -6,6 +6,7 @@
 #include <fstream>
 #include <vector>
 #include <cstdlib>
+#include <string.h>
 #include "olg_formula.h"
 using namespace std;
 
@@ -24,7 +25,7 @@ olg_formula::olg_formula(spot::formula input){
 }
 
 olg_formula::~olg_formula(){
-	olgFormula.~formula();
+	//olgFormula.~formula();
 }
 
 spot::formula olg_formula::build_olg_formula(spot::formula toBuild){
@@ -240,10 +241,15 @@ bool olg_formula::sat(){
 	print_psl(std::cout,CNFformat)<<"  --CNF\n";
 	write_dimacs(CNFformat);
 	system("minisat cnf.dimacs out");
-	char buffer[100];
-	ifstream in("out");
-		
-	return false;
+	char buffer[100]; 
+	ifstream in("out"); cout<<"1\n";
+	in.getline(buffer,100); cout<<"2\n";
+	in.close();     cout<<"3\n";
+	//string result=buffer;
+	if(strcmp(buffer,"SAT")==0)
+		return true;
+	else
+		return false;
 }
 
 /*
