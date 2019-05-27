@@ -28,6 +28,7 @@ bool olg_check::check(){
 		//bool is_olg_sat=olg.sat(); std::cout<<"4 "<<is_olg_sat<<"\n";
 		if(olg.sat())
 			return true;*/
+		
 		dnf_formula *dnf = new dnf_formula(formula_check);
 		std::cout<<(*dnf).to_string().c_str()<<"\n";
 	}

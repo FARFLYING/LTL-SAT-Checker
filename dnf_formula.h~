@@ -24,12 +24,15 @@ class dnf_formula{
 		std::string to_string ()const;
 		dnf_clause_set *find_next ();
 		dnf_clause_set *get_next ()const;
-		dnf_clause_set *get_next ()const;
+		void get_next (dnf_clause_set *dc_set)const;
+		dnf_formula *unique ();
+		dnf_formula *clone ()const;
 
 	private:
 		spot::formula *_id;
 		dnf_formula *_left; // 并集左节点
  		dnf_formula *_right; // 并集右节点
+		dnf_formula *_unique; // 对应的dnf唯一标识
 
 	private:
   		static af_dnf_map all_dnfs; //记录所有dnf

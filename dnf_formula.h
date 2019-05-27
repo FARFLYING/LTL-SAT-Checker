@@ -25,11 +25,15 @@ class dnf_formula{
 		dnf_clause_set *find_next ();
 		dnf_clause_set *get_next ()const;
 		void get_next (dnf_clause_set *dc_set)const;
+		dnf_formula *unique ();
+		dnf_formula *clone ()const;
+		void cross (const dnf_formula *dnf1, const dnf_formula *dnf2, dnf_clause_set *s);
 
 	private:
 		spot::formula *_id;
 		dnf_formula *_left; // 并集左节点
  		dnf_formula *_right; // 并集右节点
+		dnf_formula *_unique; // 对应的dnf唯一标识
 
 	private:
   		static af_dnf_map all_dnfs; //记录所有dnf
