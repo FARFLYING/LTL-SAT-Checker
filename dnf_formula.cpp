@@ -54,8 +54,10 @@ void dnf_formula::build(){
 			vector<spot::formula> temp;
 			temp.push_back(_id->operator[](0));
 			temp.push_back(_id->operator[](1));
-			spot::formula *l_afp=new spot::formula(simp.simplify(spot::formula::And(temp)));
-			spot::formula *r_afp=new spot::formula(simp.simplify(spot::formula::X(*_id)));
+			//spot::formula *l_afp=new spot::formula(simp.simplify(spot::formula::And(temp)));
+			spot::formula *l_afp=new spot::formula(spot::formula::And(temp));
+			//spot::formula *r_afp=new spot::formula(simp.simplify(spot::formula::X(*_id)));
+			spot::formula *r_afp=new spot::formula(spot::formula::X(*_id));
 			temp.clear();
 			temp.push_back(_id->operator[](1));
 			temp.push_back(*r_afp);

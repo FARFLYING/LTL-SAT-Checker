@@ -42,10 +42,10 @@ void dnf_formula::build(){
 		}
 		case spot::op::U:{// DNF(φ1 U φ2) = DNF(φ1 ∧ X(φ1 U φ2)) ∪ DNF(φ2)
 			vector<spot::formula> temp;
-			spot::formula *afp=new spot::formula(simp.simplify(spot::formula::X(*_id))); print_psl(std::cout,*afp)<<"\n";
+			spot::formula *afp=new spot::formula(simp.simplify(spot::formula::X(*_id))); //print_psl(std::cout,*afp)<<"\n";
 			temp.push_back(*afp);
 			temp.push_back(_id->operator[](0));
-			afp=new spot::formula(simp.simplify(spot::formula::And(temp)));   print_psl(std::cout,*afp)<<"\n";
+			afp=new spot::formula(simp.simplify(spot::formula::And(temp)));   //print_psl(std::cout,*afp)<<"\n";
 			_left=dnf_formula (*afp).unique();
 			_right=dnf_formula(_id->operator[](1)).unique();
 			break;
