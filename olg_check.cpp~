@@ -5,7 +5,11 @@
 #include "dnf_formula.h"
 #include <vector>
 
+olg_check::timestamp olg_check::dfn;
+olg_check::timestamp olg_check::low;
 
+std::vector<olg_check::edge_set> olg_check::_path;
+std::vector<spot::formula *> olg_check::_states;
 
 olg_check::olg_check(spot::formula f){
 	formula_check=clone(f);
@@ -19,6 +23,24 @@ spot::formula olg_check::clone(spot::formula in){
 	return in;
 }
 
+void olg_check::init ()
+{
+  this->_index = 1;
+  this->low.clear ();
+  this->dfn.clear ();
+  while (!this->_stk.empty ())this->_stk.pop ();
+  this->_instk.clear ();
+  this->_result = "";
+  _path.clear();
+  _states.clear();
+  _evidence = "";
+}
+
+bool olg_check::is_sat(){
+	init();
+	return check();
+}
+
 bool olg_check::check(){
 	if(formula_check.is_tt())
 		return true;
@@ -30,16 +52,24 @@ bool olg_check::check(){
 		if(olg.sat())
 			return true;*/
 		
-		print_psl(std::cout,trans_F_G(formula_check))<<"\n";
-		/*dnf_formula *dnf = new dnf_formula(formula_check);
-		std::cout<<(*dnf).to_string().c_str()<<"\n";*/
+		print_psl(std::cout,trans_F_G(formula_check))<<" --classify\n";
+		dnf_formula *dnf = new dnf_formula(trans_F_G(formula_check));
+		//std::cout<<(*dnf).to_string().c_str()<<"\n";
+
+		edge_set *es = new edge_set ();
+  		_scc[dnf] = es;
+  		edge_set::iterator eit;
+
 	}
 	return false;
 }
 
 spot::formula olg_check::trans_F_G(spot::formula to_trans){
-	if(to_trans.is_constant() | to_trans.is_literal()){
+	if(to_trans.kind()==spot::op::ap){
 		return to_trans;
+	}
+	else if(to_trans.kind()==spot::op::Not){
+		return spot::formula::Not(trans_F_G(to_trans.operator[](0)));	
 	}
 	else if(to_trans.kind()==spot::op::G){//G a = ff R a
 		return spot::formula::R(spot::formula::ff(),trans_F_G(to_trans.operator[](0)));
@@ -52,6 +82,9 @@ spot::formula olg_check::trans_F_G(spot::formula to_trans){
 	}
 	else if(to_trans.kind()==spot::op::U){
 		return spot::formula::U(trans_F_G(to_trans.operator[](0)),trans_F_G(to_trans.operator[](1)));	
+	}
+	else if(to_trans.kind()==spot::op::X){
+		return  spot::formula::X(trans_F_G(to_trans.operator[](0)));	
 	}
 	else if(to_trans.kind()==spot::op::Or){
 		std::vector<spot::formula> temp;

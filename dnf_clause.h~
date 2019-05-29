@@ -5,8 +5,8 @@
 
 class dnf_clause{
 	public:
-		spot::formula current;
-		spot::formula next;
+		spot::formula *current;
+		spot::formula *next;
 		size_t _hash; 
 		
 		dnf_clause(spot::formula *current=NULL,spot::formula *next=NULL);

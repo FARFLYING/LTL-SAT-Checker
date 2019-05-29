@@ -15,12 +15,14 @@ class olg_check{
 		bool check();
 		spot::formula clone(spot::formula);
 		spot::formula trans_F_G(spot::formula);
+		void init();
 
 		typedef hash_set<spot::formula *> edge_set;
 		typedef hash_set<spot::formula *> dnf_set;
   		typedef hash_set<spot::formula *> afp_set;
   		typedef hash_map<spot::formula *, int> timestamp;
   		typedef hash_map<dnf_formula *, edge_set *> scc_edge;
+		bool is_sat();
 	private:
 		spot::formula formula_check;
 
@@ -33,6 +35,10 @@ class olg_check{
 
   		std::string _result; //记录sat证据
   		scc_edge _scc; //记录scc边的信息
+		std::string _evidence;
+
+		static std::vector<edge_set> _path;
+  		static std::vector<spot::formula *> _states;
 };
 
 #endif

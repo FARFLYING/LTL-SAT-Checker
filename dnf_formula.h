@@ -28,6 +28,8 @@ class dnf_formula{
 		dnf_formula *unique ();
 		dnf_formula *clone ()const;
 		void cross (const dnf_formula *dnf1, const dnf_formula *dnf2, dnf_clause_set *s);
+		spot::formula trans_F_G(spot::formula);
+		spot::formula simplify_And(spot::formula);
 
 	private:
 		spot::formula *_id;

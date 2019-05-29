@@ -15,12 +15,14 @@ class olg_check{
 		bool check();
 		spot::formula clone(spot::formula);
 		spot::formula trans_F_G(spot::formula);
+		void init();
 
 		typedef hash_set<spot::formula *> edge_set;
 		typedef hash_set<spot::formula *> dnf_set;
   		typedef hash_set<spot::formula *> afp_set;
   		typedef hash_map<spot::formula *, int> timestamp;
   		typedef hash_map<dnf_formula *, edge_set *> scc_edge;
+		bool sat();
 	private:
 		spot::formula formula_check;
 
@@ -28,11 +30,15 @@ class olg_check{
   		static timestamp dfn; //节点或节点的子树能够追溯到的最早的栈中节点的次序号
 
 		int _index; //节点访问次序
-  		std::stack<aalta_formula *> _stk; //栈
+  		std::stack<spot::formula *> _stk; //栈
   		dnf_set _instk; // 记是否在栈中
 
   		std::string _result; //记录sat证据
   		scc_edge _scc; //记录scc边的信息
+		std::string _evidence;
+
+		static std::vector<edge_set> _path;
+  		static std::vector<spot::formula *> _states;
 };
 
 #endif

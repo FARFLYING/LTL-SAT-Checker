@@ -14,6 +14,7 @@ class dnf_clause{
 		std::string to_string ()const;
 
 		bool operator == (const dnf_clause& dc)const;
+		bool operator< (const dnf_clause& dc)const;
 
 		struct dnf_clause_hash
 		{

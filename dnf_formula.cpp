@@ -18,7 +18,7 @@ void dnf_formula::init ()
 dnf_formula::dnf_formula(spot::formula input){
 	this->init ();
 	_id=new spot::formula(input);
-	//print_psl(std::cout,*_id)<<"\n";
+	//print_psl(std::cout,*_id)<<"--_id\n";
 	build();
 }
 
@@ -42,10 +42,12 @@ void dnf_formula::build(){
 		}
 		case spot::op::U:{// DNF(φ1 U φ2) = DNF(φ1 ∧ X(φ1 U φ2)) ∪ DNF(φ2)
 			vector<spot::formula> temp;
-			spot::formula *afp=new spot::formula(simp.simplify(spot::formula::X(*_id))); //print_psl(std::cout,*afp)<<"\n";
+			//spot::formula *afp=new spot::formula(trans_F_G(simp.simplify(spot::formula::X(*_id)))); //print_psl(std::cout,*afp)<<"\n";
+			spot::formula *afp=new spot::formula(spot::formula::X(*_id)); print_psl(std::cout,*afp)<<"  --1\n";
 			temp.push_back(*afp);
 			temp.push_back(_id->operator[](0));
-			afp=new spot::formula(simp.simplify(spot::formula::And(temp)));   //print_psl(std::cout,*afp)<<"\n";
+			//afp=new spot::formula(trans_F_G(simp.simplify(spot::formula::And(temp))));   //print_psl(std::cout,*afp)<<"\n";
+			afp=new spot::formula(spot::formula::And(temp));  print_psl(std::cout,*afp)<<"  --2\n";
 			_left=dnf_formula (*afp).unique();
 			_right=dnf_formula(_id->operator[](1)).unique();
 			break;
@@ -54,15 +56,18 @@ void dnf_formula::build(){
 			vector<spot::formula> temp;
 			temp.push_back(_id->operator[](0));
 			temp.push_back(_id->operator[](1));
-			//spot::formula *l_afp=new spot::formula(simp.simplify(spot::formula::And(temp)));
-			spot::formula *l_afp=new spot::formula(spot::formula::And(temp));
-			//spot::formula *r_afp=new spot::formula(simp.simplify(spot::formula::X(*_id)));
-			spot::formula *r_afp=new spot::formula(spot::formula::X(*_id));
+			//spot::formula *l_afp=new spot::formula(trans_F_G(simp.simplify(spot::formula::And(temp))));
+			spot::formula *l_afp=new spot::formula(spot::formula::And(temp)); print_psl(std::cout,*l_afp)<<"  --3\n";
+			//spot::formula *r_afp=new spot::formula(trans_F_G(simp.simplify(spot::formula::X(*_id))));
+			spot::formula *r_afp=new spot::formula(spot::formula::X(*_id));  print_psl(std::cout,*r_afp)<<"  --4\n";
 			temp.clear();
 			temp.push_back(_id->operator[](1));
 			temp.push_back(*r_afp);
-			r_afp=new spot::formula(simp.simplify(spot::formula::And(temp)));
-			_left=dnf_formula(*l_afp).unique();
+			//r_afp=new spot::formula(trans_F_G(simp.simplify(spot::formula::And(temp)))); 
+			r_afp=new spot::formula(spot::formula::And(temp)); print_psl(std::cout,*r_afp)<<"  --5\n";
+			//print_psl(std::cout,*l_afp)<<" --l_afp\n";	
+			//print_psl(std::cout,*r_afp)<<" --r_afp\n";
+			_left=dnf_formula(*l_afp).unique();   
 			_right=dnf_formula(*r_afp).unique();
 			break;
 		}
@@ -169,17 +174,65 @@ void dnf_formula::cross (const dnf_formula *dnf1, const dnf_formula *dnf2, dnf_c
 			vector<spot::formula> temp;
 			temp.push_back(*it1->current);
 			temp.push_back(*it2->current);
-			spot::formula *caf=new spot::formula(simp.simplify(spot::formula::And(temp)));
+			//spot::formula *caf=new spot::formula(trans_F_G(simp.simplify(spot::formula::And(temp))));
+			spot::formula *caf=new spot::formula(simplify_And(spot::formula::And(temp))); //print_psl(std::cout,*caf)<<"  --6";
+			std::cout<<spot::str_psl(*it1->current)<<" --it1 "<<spot::str_psl(*it2->current)<<" --it2 "<<spot::str_psl(*caf)<<"  --6 "<<"\n";
             if (caf->kind()==spot::op::ff)
             	continue;
             //aalta_formula *naf = aalta_formula::simplify_and_weak (it1->next, it2->next);
 			temp.clear();
 			temp.push_back(*it1->next);
 			temp.push_back(*it2->next);
-			spot::formula *naf=new spot::formula(simp.simplify(spot::formula::And(temp)));
+			//spot::formula *naf=new spot::formula(trans_F_G(simp.simplify(spot::formula::And(temp))));
+			spot::formula *naf=new spot::formula(simplify_And(spot::formula::And(temp))); print_psl(std::cout,*naf)<<"  --7\n";
             s->insert (dnf_clause (caf, naf));
           }
     }
+}
+
+spot::formula dnf_formula::trans_F_G(spot::formula to_trans){
+	if(to_trans.is_constant() | to_trans.is_literal()){
+		return to_trans;
+	}
+	else if(to_trans.kind()==spot::op::G){//G a = ff R a
+		return spot::formula::R(spot::formula::ff(),trans_F_G(to_trans.operator[](0)));
+	}
+	else if(to_trans.kind()==spot::op::F){//F a = tt U a
+		return spot::formula::U(spot::formula::tt(),trans_F_G(to_trans.operator[](0)));	
+	}
+	else if(to_trans.kind()==spot::op::R){
+		return spot::formula::R(trans_F_G(to_trans.operator[](0)),trans_F_G(to_trans.operator[](1)));	
+	}
+	else if(to_trans.kind()==spot::op::U){
+		return spot::formula::U(trans_F_G(to_trans.operator[](0)),trans_F_G(to_trans.operator[](1)));	
+	}
+	else if(to_trans.kind()==spot::op::Or){
+		std::vector<spot::formula> temp;
+		for(int i=0;i<to_trans.size();i++){
+			temp.push_back(trans_F_G(to_trans.operator[](i)));		
+		}
+		return spot::formula::Or(temp);
+	}
+	else if(to_trans.kind()==spot::op::And){
+		std::vector<spot::formula> temp;
+		for(int i=0;i<to_trans.size();i++){
+			temp.push_back(trans_F_G(to_trans.operator[](i)));		
+		}
+		return spot::formula::And(temp);
+	}
+}
+
+spot::formula dnf_formula::simplify_And(spot::formula input){
+	vector<spot::formula> sub_formula;
+	for(int i=0;i<input.size();i++)
+		sub_formula.push_back(input.operator[](i));
+	
+	for(int i=0;i<input.size();i++){
+		vector<spot::formula>::iterator it=find(sub_formula.begin(),sub_formula.end(),spot::formula::Not(input.operator[](i)));
+		if(it!=sub_formula.end())
+			return spot::formula::ff();	
+	}
+	return input;
 }
 
 dnf_formula* dnf_formula::unique ()
