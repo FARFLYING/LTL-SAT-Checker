@@ -8,8 +8,8 @@
 dnf_clause::dnf_clause(spot::formula *current,spot::formula *next){
 	this->current = current;
 	this->next = next;
-	print_psl(std::cout,*this->current)<<"\n";
-	print_psl(std::cout,*this->next)<<"\n";
+	//print_psl(std::cout,*this->current)<<"\n";
+	//print_psl(std::cout,*this->next)<<"\n";
 }
 
 void dnf_clause::clc_hash ()
@@ -22,6 +22,47 @@ void dnf_clause::clc_hash ()
 bool dnf_clause::operator == (const dnf_clause& dc) const
 {
   return *current == *dc.current && *next == *dc.next;
+}
+
+bool dnf_clause::operator< (const dnf_clause& dc) const{
+	spot::formula f1=spot::formula(*next);
+	spot::formula f2=spot::formula(*dc.next);
+	return get_length(f1) < get_length(f2);
+}
+
+int dnf_clause::get_length(spot::formula in)const{
+	switch (in.kind()){
+		case spot::op::ap:{
+			return 1;	
+		}
+		case spot::op::Not:{
+			return 1+get_length(in.operator[](0));
+		}
+		case spot::op::G:{
+			return 	2+get_length(in.operator[](0));
+		}
+		case spot::op::F:{
+			return 	2+get_length(in.operator[](0));
+		}
+		case spot::op::X:{
+			return 1+get_length(in.operator[](0));
+		}
+		case spot::op::R:{
+			return 1+get_length(in.operator[](0))+get_length(in.operator[](1));
+		}
+		case spot::op::U:{
+			return 1+get_length(in.operator[](0))+get_length(in.operator[](1));
+		}
+		case spot::op::Or:{
+			return 1+get_length(in.operator[](0))+get_length(in.all_but(0));
+		}
+		case spot::op::And:{
+			return 1+get_length(in.operator[](0))+get_length(in.all_but(0));
+		}
+		default:{
+			return 0;		
+		}
+	}
 }
 
 std::string dnf_clause::to_string () const

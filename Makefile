@@ -1,4 +1,4 @@
-LST:main.o olg_check.o olg_formula.o dnf_formula.o dnf_clause.o 
+LST:main.o olg_formula.o dnf_formula.o dnf_clause.o olg_check.o
 	g++ main.o olg_check.o olg_formula.o dnf_formula.o dnf_clause.o -o LST -lspot
 	-rm -f *.o
 main.o:main.cpp

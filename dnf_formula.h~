@@ -29,7 +29,8 @@ class dnf_formula{
 		dnf_formula *clone ()const;
 		void cross (const dnf_formula *dnf1, const dnf_formula *dnf2, dnf_clause_set *s);
 		spot::formula trans_F_G(spot::formula);
-
+		spot::formula simplify_And(spot::formula);
+		dnf_formula *get_dnf(spot::formula *);
 	private:
 		spot::formula *_id;
 		dnf_formula *_left; // 并集左节点

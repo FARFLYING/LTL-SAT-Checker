@@ -98,6 +98,13 @@ void dnf_formula::build(){
 	}
 }
 
+dnf_formula * dnf_formula::get_dnf(spot::formula *f){
+	af_dnf_map::const_iterator it = all_dnfs.find (f);
+  	if (it != all_dnfs.end ())
+    	return it->second;
+  	return NULL;
+}
+
 dnf_formula::dnf_clause_set* dnf_formula::find_next ()
 {
 	dnf_map::const_iterator it = atomic_dnfs.find (_id);
@@ -228,8 +235,9 @@ spot::formula dnf_formula::simplify_And(spot::formula input){
 		sub_formula.push_back(input.operator[](i));
 	
 	for(int i=0;i<input.size();i++){
-		if(sub_formula.find(sub_formula.begin(),sub_formula.end(),spot::formula::Not(input.operator[](i))));
-		return spot::formula::ff();	
+		vector<spot::formula>::iterator it=find(sub_formula.begin(),sub_formula.end(),spot::formula::Not(input.operator[](i)));
+		if(it!=sub_formula.end())
+			return spot::formula::ff();	
 	}
 	return input;
 }

@@ -7,12 +7,13 @@
 #include <stack>
 #include "olg_formula.h"
 #include "dnf_formula.h"
+#include "hash_set"
 
 class olg_check{
 	public:
 		olg_check(spot::formula);
 		~olg_check();
-		bool check();
+		bool check(spot::formula);
 		spot::formula clone(spot::formula);
 		spot::formula trans_F_G(spot::formula);
 		void init();
@@ -23,6 +24,10 @@ class olg_check{
   		typedef hash_map<spot::formula *, int> timestamp;
   		typedef hash_map<dnf_formula *, edge_set *> scc_edge;
 		bool is_sat();
+		hash_set<spot::formula *> and_to_set(spot::formula);
+
+		static void split2set(spot::op,spot::formula *,edge_set *);
+		static bool scc_sat (spot::formula *, edge_set *);
 	private:
 		spot::formula formula_check;
 

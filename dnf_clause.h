@@ -14,7 +14,8 @@ class dnf_clause{
 		std::string to_string ()const;
 
 		bool operator == (const dnf_clause& dc)const;
-		bool operator< (const dnf_clause& dc)const;
+		bool operator< (const dnf_clause& dc) const;
+		int get_length(spot::formula)const;
 
 		struct dnf_clause_hash
 		{
