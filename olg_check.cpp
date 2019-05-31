@@ -40,35 +40,42 @@ void olg_check::init ()
 
 bool olg_check::is_sat(){
 	init();
-	return check(formula_check);
+	spot::formula *classified=new spot::formula(trans_F_G(formula_check));
+	print_psl(std::cout,*classified)<<" --classify\n";
+	return check(classified);
 }
 
-bool olg_check::check(spot::formula to_check){
-	if(to_check.is_tt())
+bool olg_check::check(spot::formula *u){
+
+	//spot::formula classified=trans_F_G(*u);  //std::cout<<"step c\n";
+	//spot::formula *u=new spot::formula(classified);   //std::cout<<"step d\n";
+	spot::formula pre_u=spot::formula(*u);
+
+	dfn[pre_u] = low[pre_u] = _index++; print_psl(std::cout,pre_u)<<" --u "<<_index<<"\n";
+	
+	if(u->is_tt())
 		return true;
-	else if(to_check.is_ff())
+	else if(u->is_ff())
 		return false;
 	else{
        /* olg_formula olg(to_check);
 		//bool is_olg_sat=olg.sat(); std::cout<<"4 "<<is_olg_sat<<"\n";
 		if(olg.sat())
 			return true;*/
+	 
 		
-		spot::formula classified=trans_F_G(to_check);  std::cout<<"step c\n";
-		spot::formula *u=new spot::formula(classified);   std::cout<<"step d\n"; 
-		print_psl(std::cout,classified)<<" --classify\n";
-		dnf_formula *dnf = new dnf_formula(*u);    std::cout<<"step a\n";
+		dnf_formula *dnf = dnf_formula(u).unique ();   // std::cout<<"step a\n";
 		std::cout<<(*dnf).to_string().c_str()<<"\n";
-/*
+
 		edge_set *es = new edge_set ();
   		_scc[dnf] = es;
   		edge_set::iterator eit;
 
 		_stk.push (u);
-  		_instk.insert (u);
+  		_instk.insert (pre_u);
 		
 		spot::formula *v;
-		dnf_formula::dnf_clause_set *dc_set = dnf->get_next ();  std::cout<<"step b\n";
+		dnf_formula::dnf_clause_set *dc_set = dnf->get_next ();  //std::cout<<"step b\n";
 
 		int size = dc_set->size ();
 
@@ -80,39 +87,42 @@ bool olg_check::check(spot::formula to_check){
       		{
         		dnf_arr[i++] = *it;
 		
-        		printf("%s\n", (*it).to_string().c_str());
+        		//printf("%s\n", (*it).to_string().c_str());
       		}
 			std::sort (dnf_arr, dnf_arr + size);
-			std::cout<<"step 1\n";
-
+			for(int i=0;i<size;i++) std::cout<<dnf_arr[i].to_string()<<"\n";
+			//std::cout<<"step 1\n";
+		
 			for (i = 0; i < size; ++i){
-				_path.push_back(and_to_set(*dnf_arr[i].current));
-				std::cout<<"step 2\n";
+				_path.push_back(and_to_set(dnf_arr[i].current));
 				_states.push_back(u);
 
-				v = dnf_arr[i].next;  std::cout<<spot::str_psl(*v)<<" --v\n";
-				if (dfn.find (v) == dfn.end ()){
-					std::cout<<"step 2.4\n";
-					spot::formula temp=spot::parse_formula(spot::str_psl(*v));
-					if (check(temp)) return true;
-					std::cout<<"step 2.5\n";
-					timestamp::iterator u_it = low.find (u);
-              		timestamp::iterator v_it = low.find (v);
+				v = dnf_arr[i].next;  
+				spot::formula pre_v=spot::formula(*v);
+				std::cout<<spot::str_psl(pre_v)<<" --v\n";
+
+				if (dfn.find (pre_v) == dfn.end ()){
+					std::cout<<"step 2\n";
+					//spot::formula temp=spot::parse_formula(spot::str_psl(*v));
+					if (check(v)) return true;
+					//std::cout<<"step 2.5\n";
+					timestamp::iterator u_it = low.find (pre_u);
+              		timestamp::iterator v_it = low.find (pre_v);
 					if (u_it->second > v_it->second)
                 		u_it->second = v_it->second;
 					std::cout<<"step 3\n";
 				}
-				else if (_instk.find (v) != _instk.end ()){
-					timestamp::iterator u_it = low.find (u);
-              		timestamp::iterator v_it = low.find (v);
+				else if (_instk.find (pre_v) != _instk.end ()){
+					timestamp::iterator u_it = low.find (pre_u);
+              		timestamp::iterator v_it = low.find (pre_v);
               		if (u_it->second > v_it->second)
                	 		u_it->second = v_it->second;
 					std::cout<<"step 4\n";
 				}
 
-				if (low[u] == low[v]){
+				if (low[pre_u] == low[pre_v]){
 					split2set (spot::op::And, dnf_arr[i].current, es);
-					if (u != v){
+					if (pre_u != pre_v){
 						edge_set *next_edge = _scc[dnf_formula::get_dnf (v)];
 						for (eit = next_edge->begin (); eit != next_edge->end (); eit++)
 							es->insert (*eit);
@@ -120,9 +130,10 @@ bool olg_check::check(spot::formula to_check){
 					}
 					if(scc_sat (u, es)){
 						spot::formula *aff = _states.back();
+						spot::formula con_aff=spot::formula(*aff);
 						_states.pop_back();
 						std::vector<edge_set> path;
-						while(aff != v)
+						while(con_aff != pre_v)
                   		{
                     		path.push_back(_path.back());
                     		_path.pop_back();
@@ -137,15 +148,16 @@ bool olg_check::check(spot::formula to_check){
 			std::cout<<"step 7\n";
 		}
 		
-		if (dfn[u] == low[u]){
+		spot::formula pre_v2=spot::formula(*v);
+		if (dfn[pre_u] == low[pre_u]){
 			do{
 				v = _stk.top ();
-          		_instk.erase (v);
+          		_instk.erase (pre_v2);
           		_stk.pop ();
-        	}while (v != u);
+        	}while (pre_v2 != pre_u);
 		std::cout<<"step 8\n";
 		}
-		return false;*/
+		return false;
 	}
 	return false;
 }
@@ -190,14 +202,16 @@ bool olg_check::scc_sat(spot::formula *f, edge_set *s){
 	}
 }
 
-hash_set<spot::formula *> olg_check::and_to_set(spot::formula in){
+hash_set<spot::formula *> olg_check::and_to_set(spot::formula *in){
 	hash_set<spot::formula *> result, result1, result2;
 
-	if(in.kind()!=spot::op::And)
-		result.insert(&in);
+	if(in->kind()!=spot::op::And)
+		result.insert(in);
 	else{
-		result1=and_to_set(in.operator[](0));
-		result2=and_to_set(in.all_but(0));
+		spot::formula *l=new spot::formula(in->operator[](0));
+		spot::formula *r=new spot::formula(in->all_but(0));
+		result1=and_to_set(l);
+		result2=and_to_set(r);
 		result.insert(result1.begin(), result1.end());
     	result.insert(result2.begin(), result2.end());
 		result1.clear();
@@ -208,6 +222,9 @@ hash_set<spot::formula *> olg_check::and_to_set(spot::formula in){
 
 spot::formula olg_check::trans_F_G(spot::formula to_trans){
 	if(to_trans.kind()==spot::op::ap){
+		return to_trans;
+	}
+	if(to_trans.kind()==spot::op::tt | to_trans.kind()==spot::op::ff){
 		return to_trans;
 	}
 	else if(to_trans.kind()==spot::op::Not){

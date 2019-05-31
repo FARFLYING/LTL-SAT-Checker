@@ -13,18 +13,18 @@ class olg_check{
 	public:
 		olg_check(spot::formula);
 		~olg_check();
-		bool check(spot::formula);
+		bool check(spot::formula *);
 		spot::formula clone(spot::formula);
 		spot::formula trans_F_G(spot::formula);
 		void init();
 
 		typedef hash_set<spot::formula *> edge_set;
-		typedef hash_set<spot::formula *> dnf_set;
+		typedef hash_set<spot::formula > dnf_set;
   		typedef hash_set<spot::formula *> afp_set;
-  		typedef hash_map<spot::formula *, int> timestamp;
+  		typedef hash_map<spot::formula , int> timestamp;
   		typedef hash_map<dnf_formula *, edge_set *> scc_edge;
 		bool is_sat();
-		hash_set<spot::formula *> and_to_set(spot::formula);
+		hash_set<spot::formula *> and_to_set(spot::formula *);
 
 		static void split2set(spot::op,spot::formula *,edge_set *);
 		static bool scc_sat (spot::formula *, edge_set *);

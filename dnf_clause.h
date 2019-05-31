@@ -13,6 +13,7 @@ class dnf_clause{
 		void clc_hash ();
 		std::string to_string ()const;
 
+		dnf_clause& operator = (const dnf_clause& dc);
 		bool operator == (const dnf_clause& dc)const;
 		bool operator< (const dnf_clause& dc) const;
 		int get_length(spot::formula)const;

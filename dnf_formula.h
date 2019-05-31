@@ -18,7 +18,8 @@ class dnf_formula{
 		typedef hash_map<spot::formula *, dnf_formula *> af_dnf_map;
 		typedef hash_map<spot::formula *, dnf_clause_set *> dnf_map;
 
-		dnf_formula(spot::formula);
+		dnf_formula(spot::formula *);
+		dnf_formula (const dnf_formula& orig);
 		void build();
 		void init();
 		std::string to_string ()const;
@@ -31,6 +32,7 @@ class dnf_formula{
 		spot::formula trans_F_G(spot::formula);
 		spot::formula simplify_And(spot::formula);
 		static dnf_formula *get_dnf(spot::formula *);
+		dnf_formula& operator = (const dnf_formula& dnf);
 	private:
 		spot::formula *_id;
 		dnf_formula *_left; // 并集左节点

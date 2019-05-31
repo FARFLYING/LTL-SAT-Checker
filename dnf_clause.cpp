@@ -10,6 +10,7 @@ dnf_clause::dnf_clause(spot::formula *current,spot::formula *next){
 	this->next = next;
 	//print_psl(std::cout,*this->current)<<"\n";
 	//print_psl(std::cout,*this->next)<<"\n";
+	clc_hash ();
 }
 
 void dnf_clause::clc_hash ()
@@ -21,7 +22,18 @@ void dnf_clause::clc_hash ()
 
 bool dnf_clause::operator == (const dnf_clause& dc) const
 {
-  return *current == *dc.current && *next == *dc.next;
+  return current == dc.current && next == dc.next;
+}
+
+dnf_clause& dnf_clause::operator = (const dnf_clause& dc)
+{
+  if (this != &dc)
+    {
+      this->current = dc.current;
+      this->next = dc.next;
+      this->_hash = dc._hash;
+    }
+  return *this;
 }
 
 bool dnf_clause::operator< (const dnf_clause& dc) const{

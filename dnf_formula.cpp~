@@ -15,9 +15,15 @@ void dnf_formula::init ()
   _id = NULL;
 }
 
-dnf_formula::dnf_formula(spot::formula input){
+dnf_formula::dnf_formula (const dnf_formula& orig)
+{
+  *this = orig;
+}
+
+dnf_formula::dnf_formula(spot::formula *input){
 	this->init ();
-	_id=new spot::formula(input);
+	//_id=new spot::formula(input);
+	_id=input;
 	//print_psl(std::cout,*_id)<<"--_id\n";
 	build();
 }
@@ -26,16 +32,18 @@ void dnf_formula::build(){
 	if (_id == NULL) return;
 	spot::tl_simplifier simp;
 	af_dnf_map::const_iterator it = all_dnfs.find (_id);
+
 	if (it != all_dnfs.end ()){
-		*this = *(it->second);
-		return;
+		*this = *(it->second);  cout<<"find\n";
+		return; 
 	}
+
 	switch(_id->kind()){
 		case spot::op::X:{
 			dnf_clause_set *dc_set = this->find_next ();
 			if (dc_set->empty ()){
-				spot::formula *cur=new spot::formula(spot::formula::tt());
-				spot::formula *nxt=new spot::formula(_id->operator[](0));
+				spot::formula *cur=new spot::formula(spot::formula::tt()); print_psl(std::cout,*cur)<<"  --Next 1\n";
+				spot::formula *nxt=new spot::formula(_id->operator[](0)); print_psl(std::cout,*nxt)<<"  --Next 2\n";
 				dc_set->insert (dnf_clause (cur,nxt));
 			}	
         	break;
@@ -48,8 +56,10 @@ void dnf_formula::build(){
 			temp.push_back(_id->operator[](0));
 			//afp=new spot::formula(trans_F_G(simp.simplify(spot::formula::And(temp))));   //print_psl(std::cout,*afp)<<"\n";
 			afp=new spot::formula(spot::formula::And(temp));  print_psl(std::cout,*afp)<<"  --2\n";
-			_left=dnf_formula (*afp).unique();
-			_right=dnf_formula(_id->operator[](1)).unique();
+			_left=dnf_formula (afp).unique();
+			//spot::formula p=_id->operator[](1);
+			spot::formula *r=new spot::formula(_id->operator[](1));
+			_right=dnf_formula(r).unique(); 
 			break;
 		}
 		case spot::op::R:{// DNF(φ1 R φ2) = DNF(φ1 ∧ φ2) ∪ DNF(φ2 ∧ X(φ1 R φ2))
@@ -67,20 +77,30 @@ void dnf_formula::build(){
 			r_afp=new spot::formula(spot::formula::And(temp)); print_psl(std::cout,*r_afp)<<"  --5\n";
 			//print_psl(std::cout,*l_afp)<<" --l_afp\n";	
 			//print_psl(std::cout,*r_afp)<<" --r_afp\n";
-			_left=dnf_formula(*l_afp).unique();   
-			_right=dnf_formula(*r_afp).unique();
+			_left=dnf_formula(l_afp).unique();   
+			_right=dnf_formula(r_afp).unique();
 			break;
 		}
 		case spot::op::Or:{// DNF(φ1 ∨ φ2) = DNF(φ1) ∪ DNF(φ2)
-			_left=dnf_formula(_id->operator[](0)).unique();
-			_right=dnf_formula(_id->all_but(0)).unique();
+			//spot::formula p=_id->operator[](0);
+			spot::formula *l=new spot::formula(_id->operator[](0));   print_psl(std::cout,*l)<<"  --8\n";
+			_left=dnf_formula(l).unique();    
+			//spot::formula q=_id->all_but(0);
+			spot::formula *r=new spot::formula(_id->all_but(0));		print_psl(std::cout,*r)<<"  --9\n";
+			_right=dnf_formula(r).unique();
 			break;
 		}
 		case spot::op::And:{// DNF(φ1∧φ2) = {(α1∧α2)∧X(ψ1∧ψ2) | ∀i = 1,2.αi∧X(ψi) ∈ DNF(φi)}
 			dnf_clause_set *dc_set = this->find_next ();
 			if (dc_set->empty ()){
-				dnf_formula *l_dnf = dnf_formula(_id->operator[](0)).unique ();
-				dnf_formula *r_dnf = dnf_formula(_id->all_but(0)).unique ();
+				//spot::formula p=_id->operator[](0);
+				//spot::formula p=_id->all_but(_id->size()-1);
+				spot::formula *l=new spot::formula(_id->all_but(_id->size()-1));  print_psl(std::cout,*l)<<"  --10\n";
+				dnf_formula *l_dnf = dnf_formula(l).unique ();
+				//spot::formula q=_id->all_but(0);
+				//spot::formula q=_id->operator[](_id->size()-1);
+				spot::formula *r=new spot::formula(_id->operator[](_id->size()-1));  print_psl(std::cout,*r)<<"  --11\n";
+				dnf_formula *r_dnf = dnf_formula(r).unique ();
 				cross (l_dnf, r_dnf, dc_set);
 			}
 			break;
@@ -116,6 +136,18 @@ dnf_formula::dnf_clause_set* dnf_formula::find_next ()
       	return tmp;
     }
   	return it->second;
+}
+
+dnf_formula& dnf_formula::operator = (const dnf_formula& dnf)
+{
+  if (this != &dnf)
+    {
+      this->_id = dnf._id;
+      this->_left = dnf._left;
+      this->_right = dnf._right;
+      this->_unique = dnf._unique;
+    }
+  return *this;
 }
 
 dnf_formula::dnf_clause_set * dnf_formula::get_next () const
