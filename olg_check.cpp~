@@ -13,6 +13,8 @@ olg_check::timestamp olg_check::low;
 std::vector<olg_check::edge_set> olg_check::_path;
 std::vector<spot::formula *> olg_check::_states;
 
+std::vector<spot::formula *> olg_check::all_formula;
+
 olg_check::olg_check(spot::formula f){
 	formula_check=clone(f);
 }
@@ -49,16 +51,16 @@ bool olg_check::check(spot::formula *u){
 
 	//spot::formula classified=trans_F_G(*u);  //std::cout<<"step c\n";
 	//spot::formula *u=new spot::formula(classified);   //std::cout<<"step d\n";
-	spot::formula pre_u=spot::formula(*u);
+	//spot::formula pre_u=spot::formula(*u);
 
-	dfn[pre_u] = low[pre_u] = _index++; print_psl(std::cout,pre_u)<<" --u "<<_index<<"\n";
+	dfn[u] = low[u] = _index++; print_psl(std::cout,*u)<<" --u "<<_index<<"\n";
 	
 	if(u->is_tt())
 		return true;
 	else if(u->is_ff())
 		return false;
 	else{
-       /* olg_formula olg(to_check);
+        olg_formula olg(formula_check);
 		//bool is_olg_sat=olg.sat(); std::cout<<"4 "<<is_olg_sat<<"\n";
 		if(olg.sat())
 			return true;*/
@@ -72,7 +74,7 @@ bool olg_check::check(spot::formula *u){
   		edge_set::iterator eit;
 
 		_stk.push (u);
-  		_instk.insert (pre_u);
+  		_instk.insert (u);
 		
 		spot::formula *v;
 		dnf_formula::dnf_clause_set *dc_set = dnf->get_next ();  //std::cout<<"step b\n";
@@ -97,43 +99,44 @@ bool olg_check::check(spot::formula *u){
 				_path.push_back(and_to_set(dnf_arr[i].current));
 				_states.push_back(u);
 
-				v = dnf_arr[i].next;  
-				spot::formula pre_v=spot::formula(*v);
-				std::cout<<spot::str_psl(pre_v)<<" --v\n";
+				v = unique(dnf_arr[i].next);  
+				//spot::formula pre_v=spot::formula(*v);
+				std::cout<<spot::str_psl(*v)<<" --v\n";
 
-				if (dfn.find (pre_v) == dfn.end ()){
+				if (dfn.find (v) == dfn.end ()){
 					std::cout<<"step 2\n";
 					//spot::formula temp=spot::parse_formula(spot::str_psl(*v));
 					if (check(v)) return true;
 					//std::cout<<"step 2.5\n";
-					timestamp::iterator u_it = low.find (pre_u);
-              		timestamp::iterator v_it = low.find (pre_v);
+					timestamp::iterator u_it = low.find (u);
+              		timestamp::iterator v_it = low.find (v);
 					if (u_it->second > v_it->second)
                 		u_it->second = v_it->second;
 					std::cout<<"step 3\n";
 				}
-				else if (_instk.find (pre_v) != _instk.end ()){
-					timestamp::iterator u_it = low.find (pre_u);
-              		timestamp::iterator v_it = low.find (pre_v);
+				else if (_instk.find (v) != _instk.end ()){
+					timestamp::iterator u_it = low.find (u); //cout<<u_it->second<<" --4 u_it->second\n";
+              		timestamp::iterator v_it = low.find (v); //cout<<v_it->second<<" --4 v_it->second\n";
               		if (u_it->second > v_it->second)
                	 		u_it->second = v_it->second;
 					std::cout<<"step 4\n";
 				}
 
-				if (low[pre_u] == low[pre_v]){
+				std::cout<<"low[u]:"<<low[u]<<" low[v]:"<<low[v]<<"\n";
+				if (low[u] == low[v]){
 					split2set (spot::op::And, dnf_arr[i].current, es);
-					if (pre_u != pre_v){
+					if (u != v){
 						edge_set *next_edge = _scc[dnf_formula::get_dnf (v)];
 						for (eit = next_edge->begin (); eit != next_edge->end (); eit++)
 							es->insert (*eit);
 						std::cout<<"step 5\n";
 					}
-					if(scc_sat (u, es)){
+					if(scc_sat (unique(u), es)){
 						spot::formula *aff = _states.back();
-						spot::formula con_aff=spot::formula(*aff);
+						//spot::formula con_aff=spot::formula(*aff);
 						_states.pop_back();
 						std::vector<edge_set> path;
-						while(con_aff != pre_v)
+						while(aff != v)
                   		{
                     		path.push_back(_path.back());
                     		_path.pop_back();
@@ -148,13 +151,13 @@ bool olg_check::check(spot::formula *u){
 			std::cout<<"step 7\n";
 		}
 		
-		spot::formula pre_v2=spot::formula(*v);
-		if (dfn[pre_u] == low[pre_u]){
+		//spot::formula pre_v2=spot::formula(*v);
+		if (dfn[u] == low[u]){
 			do{
 				v = _stk.top ();
-          		_instk.erase (pre_v2);
+          		_instk.erase (v);
           		_stk.pop ();
-        	}while (pre_v2 != pre_u);
+        	}while (v != u);
 		std::cout<<"step 8\n";
 		}
 		return false;
@@ -165,40 +168,54 @@ bool olg_check::check(spot::formula *u){
 void olg_check::split2set(spot::op op,spot::formula *f,edge_set *s){
 	if (f == NULL) return;
 
-	if(f->kind()!=op)
-		s->insert (f);
+	if(f->kind()!=op){
+		std::cout<<"split2set 1\n";
+		s->insert (unique(f));}
 	else{
-		spot::formula *left=new spot::formula(f->operator[](0));
-		spot::formula *right=new spot::formula(f->all_but(0));
-		split2set(op,left,s);
-		split2set(op,right,s);
+		std::cout<<"split2set 2\n";
+		spot::formula *left=new spot::formula(f->all_but(f->size()-1));
+		spot::formula *right=new spot::formula(f->operator[](f->size()-1));
+		split2set(op,unique(left),s);
+		split2set(op,unique(right),s);
 	}
+}
+
+spot::formula * olg_check::unique(spot::formula * in){
+	for(std::vector<spot::formula *>::iterator it=all_formula.begin();it!=all_formula.end();it++){
+		if(*in == **it)
+			return *it;
+	}
+	all_formula.push_back(in);
+	return in;
 }
 
 bool olg_check::scc_sat(spot::formula *f, edge_set *s){
 	switch(f->kind()){
 		case spot::op::And:{
 			spot::formula *left=new spot::formula(f->operator[](0));
-			spot::formula *right=new spot::formula(f->all_but(0));
-			return scc_sat(left,s) && scc_sat(right,s);
+			spot::formula *right=new spot::formula(f->all_but(0)); std::cout<<"scc_sat1\n";
+			return scc_sat(unique(left),s) && scc_sat(unique(right),s);
 		}
 		case spot::op::Or:{
 			spot::formula *left=new spot::formula(f->operator[](0));
-			spot::formula *right=new spot::formula(f->all_but(0));
-			return scc_sat(left,s) || scc_sat(right,s);
+			spot::formula *right=new spot::formula(f->all_but(0)); std::cout<<"scc_sat2\n";
+			return scc_sat(unique(left),s) || scc_sat(unique(right),s);
 		}
 		case spot::op::U:
-    	case spot::op::R:
+    	case spot::op::R:{
+			spot::formula *sub=new spot::formula(f->operator[](1)); std::cout<<"scc_sat3\n";
+			return scc_sat(unique(sub),s);
+		} 
     	case spot::op::X:{
-			spot::formula *sub=new spot::formula(f->operator[](0));
-			return scc_sat(sub,s);
+			spot::formula *sub=new spot::formula(f->operator[](0)); std::cout<<"scc_sat4\n";
+			return scc_sat(unique(sub),s);
 		}
 		case spot::op::tt:
-			return true;
+			{ std::cout<<"scc_sat5\n"; return true;}
 		case spot::op::ff:
-			return false;
+			{ std::cout<<"scc_sat6\n"; return false;}
 		default:
-      		return s->find (f) != s->end ();
+      		{ std::cout<<"scc_sat7\n"; return s->find (f) != s->end (); }
 	}
 }
 
