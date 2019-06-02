@@ -28,7 +28,10 @@ class olg_check{
 
 		static void split2set(spot::op,spot::formula *,edge_set *);
 		static bool scc_sat (spot::formula *, edge_set *);
-		spot::formula *unique(spot::formula *);
+		static spot::formula *unique(spot::formula *);
+		void generate_evidence(std::vector<edge_set>, std::vector<edge_set>);
+
+		std::string _evidence;
 	private:
 		spot::formula formula_check;
 
@@ -41,7 +44,7 @@ class olg_check{
 
   		std::string _result; //记录sat证据
   		scc_edge _scc; //记录scc边的信息
-		std::string _evidence;
+		
 
 		static std::vector<edge_set> _path;
   		static std::vector<spot::formula *> _states;

@@ -6,6 +6,7 @@
 #include <vector>
 #include <spot/tl/print.hh>
 #include <spot/tl/parse.hh>
+#include <string>
 
 olg_check::timestamp olg_check::dfn;
 olg_check::timestamp olg_check::low;
@@ -55,12 +56,14 @@ bool olg_check::check(spot::formula *u){
 
 	dfn[u] = low[u] = _index++; print_psl(std::cout,*u)<<" --u "<<_index<<"\n";
 	
-	if(u->is_tt())
+	if(u->is_tt()){
+		_evidence = "true";
 		return true;
+	}
 	else if(u->is_ff())
 		return false;
 	else{
-        olg_formula olg(formula_check);
+        /*olg_formula olg(formula_check);
 		//bool is_olg_sat=olg.sat(); std::cout<<"4 "<<is_olg_sat<<"\n";
 		if(olg.sat())
 			return true;*/
@@ -141,6 +144,7 @@ bool olg_check::check(spot::formula *u){
                     		path.push_back(_path.back());
                     		_path.pop_back();
                   		}
+						generate_evidence(_path, path);
 						delete[] dnf_arr;
 						std::cout<<"step 6\n";
                   		return true;
@@ -178,6 +182,37 @@ void olg_check::split2set(spot::op op,spot::formula *f,edge_set *s){
 		split2set(op,unique(left),s);
 		split2set(op,unique(right),s);
 	}
+}
+
+void olg_check::generate_evidence(std::vector<edge_set> prefix, std::vector<edge_set> scc)
+{
+  int size = prefix.size();
+  std::string pre="";
+  for(int i = 0; i < size; i++)
+  {
+    std::string s = set_to_string(prefix[i]); std::cout<<s<<" --s\n";
+    _evidence += s + ", ";
+  }
+  std::string loop = "";
+  size = scc.size();
+  for(int i = size - 1; i >= 0; i --)
+  {
+     loop += set_to_string(scc[i]); std::cout<<loop<<" --loop\n";
+     if(i != 0)
+       loop += ", ";
+  }
+  _evidence += "(" + loop + ")";
+}
+
+std::string olg_check::set_to_string(edge_set atoms)
+{
+  std::string res = "";
+  edge_set::iterator it;
+  for(it = atoms.begin(); it != atoms.end(); it ++)
+  {
+    res += spot::str_psl(**it);
+  }
+  return res;
 }
 
 spot::formula * olg_check::unique(spot::formula * in){
@@ -227,8 +262,8 @@ hash_set<spot::formula *> olg_check::and_to_set(spot::formula *in){
 	else{
 		spot::formula *l=new spot::formula(in->operator[](0));
 		spot::formula *r=new spot::formula(in->all_but(0));
-		result1=and_to_set(l);
-		result2=and_to_set(r);
+		result1=and_to_set(unique(l));
+		result2=and_to_set(unique(r));
 		result.insert(result1.begin(), result1.end());
     	result.insert(result2.begin(), result2.end());
 		result1.clear();
