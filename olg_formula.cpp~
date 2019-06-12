@@ -29,8 +29,6 @@ olg_formula::~olg_formula(){
 }
 
 spot::formula olg_formula::build_olg_formula(spot::formula toBuild){
-	//spot::formula _true=spot::parse_formula("true");
-	//spot::formula _false=spot::parse_formula("false");
 	spot::formula olg;
 	
 	if(toBuild.is_tt()){
@@ -238,13 +236,13 @@ bool olg_formula::sat(){
 		return false;
 	//Minisat::Solver S;
 	spot::formula CNFformat=convert_to_CNF(olgFormula);
-	print_psl(std::cout,CNFformat)<<"  --CNF\n";
+	//print_psl(std::cout,CNFformat)<<"  --CNF\n";
 	write_dimacs(CNFformat);
 	system("minisat cnf.dimacs out");
 	char buffer[100]; 
-	ifstream in("out"); cout<<"1\n";
-	in.getline(buffer,100); cout<<"2\n";
-	in.close();     cout<<"3\n";
+	ifstream in("out"); //cout<<"1\n";
+	in.getline(buffer,100); //cout<<"2\n";
+	in.close();     //cout<<"3\n";
 	//string result=buffer;
 	if(strcmp(buffer,"SAT")==0)
 		return true;

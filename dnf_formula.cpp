@@ -22,9 +22,7 @@ dnf_formula::dnf_formula (const dnf_formula& orig)
 
 dnf_formula::dnf_formula(spot::formula *input){
 	this->init ();
-	//_id=new spot::formula(input);
 	_id=input;
-	//print_psl(std::cout,*_id)<<"--_id\n";
 	build();
 }
 
@@ -34,7 +32,7 @@ void dnf_formula::build(){
 	af_dnf_map::const_iterator it = all_dnfs.find (_id);
 
 	if (it != all_dnfs.end ()){
-		*this = *(it->second);  //cout<<"find\n";
+		*this = *(it->second);  
 		return; 
 	}
 
@@ -50,7 +48,6 @@ void dnf_formula::build(){
 		}
 		case spot::op::U:{// DNF(φ1 U φ2) = DNF(φ1 ∧ X(φ1 U φ2)) ∪ DNF(φ2)
 			vector<spot::formula> temp;
-			//spot::formula *afp=new spot::formula(trans_F_G(simp.simplify(spot::formula::X(*_id)))); //print_psl(std::cout,*afp)<<"\n";
 			spot::formula *afp=new spot::formula(spot::formula::X(*_id)); //print_psl(std::cout,*afp)<<"  --1\n";
 			temp.push_back(*afp);
 			temp.push_back(_id->operator[](0));

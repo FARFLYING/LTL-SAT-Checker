@@ -29,8 +29,6 @@ olg_formula::~olg_formula(){
 }
 
 spot::formula olg_formula::build_olg_formula(spot::formula toBuild){
-	//spot::formula _true=spot::parse_formula("true");
-	//spot::formula _false=spot::parse_formula("false");
 	spot::formula olg;
 	
 	if(toBuild.is_tt()){

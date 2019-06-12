@@ -15,13 +15,13 @@ int main()
 
 	spot::tl_simplifier simp;
 	LTLformula=simp.simplify(LTLformula);
-	print_psl(std::cout,LTLformula)<<"  --origin\n";
+	//print_psl(std::cout,LTLformula)<<"  --origin\n";
 	
 	olg_check ch(LTLformula);
 	printf ("%s\n", ch.is_sat () ? "sat" : "unsat");	
 	std::cout<<ch._evidence<<"\n";
-	/*bool is_sat=ch.check(); std::cout<<"5\n";
-	if(is_sat) 
+	//bool is_sat=ch.check(); std::cout<<"5\n";
+	/*if(is_sat) 
 		std::cout<<"sat"<<"\n";
 	else
 		std::cout<<"unsat"<<"\n";*/

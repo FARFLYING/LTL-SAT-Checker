@@ -30,6 +30,7 @@ class olg_check{
 		static bool scc_sat (spot::formula *, edge_set *);
 		static spot::formula *unique(spot::formula *);
 		void generate_evidence(std::vector<edge_set>, std::vector<edge_set>);
+		void get_evidence();
 		std::string set_to_string(edge_set);
 
 		std::string _evidence;
