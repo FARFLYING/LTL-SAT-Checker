@@ -7,6 +7,7 @@
 #include <vector>
 #include <cstdlib>
 #include <string.h>
+#include <spot/tl/simplify.hh>
 #include "olg_formula.h"
 using namespace std;
 
@@ -22,6 +23,8 @@ olg_formula::olg_formula(spot::formula input){
 	olgFormula=build_olg_formula(input);
 	//print_psl(std::cout,input)<<"\n";
 	print_psl(std::cout,olgFormula)<<"  --olg\n";
+	ofp=build_ofp(input);
+	cout<<to_ofp_string(ofp)<<"  --ofp\n";
 }
 
 olg_formula::~olg_formula(){
@@ -31,6 +34,10 @@ olg_formula::~olg_formula(){
 spot::formula olg_formula::build_olg_formula(spot::formula toBuild){
 	spot::formula olg;
 	
+	spot::tl_simplifier simp;
+	toBuild=simp.negative_normal_form(toBuild);
+	//print_psl(std::cout,toBuild)<<"  --olg NF"<<"\n";
+
 	if(toBuild.is_tt()){
 		olg=NULL;
 	}
@@ -250,13 +257,107 @@ bool olg_formula::sat(){
 		return false;
 }
 
-/*
-bool olg_formula::unsat(){
-	if(top_most==spot::op::ff)
-		return true;
-	else if(top_most==spot::op::tt)
-		return false;
-}*/
+olg_item olg_formula::build_item(spot::formula ap_name,int pos,freqkind freq){
+	olg_item item; 
+	item.ap=ap_name;
+	item.start=pos;
+	item._freq=freq;
+	return item;
+}
+
+olg_formula_position olg_formula::build_ofp(spot::formula toBuild){
+	olg_formula_position ofp;
+	ofp._left=ofp._right=NULL; 
+	switch (toBuild.kind()){
+		case spot::op::tt:{
+			ofp._op=spot::op::tt;
+			break;		
+		}
+		case spot::op::ff:{
+			ofp._op=spot::op::ff;
+			break;
+		}
+		case spot::op::Not:{
+			ofp._op=spot::op::Not;
+			ofp.atom=build_item(toBuild.operator[](0),0,Once);
+			ofp.all_atom.push_back(ofp.atom);
+			break;
+		}
+		case spot::op::ap:{
+			ofp._op=spot::op::ap;  
+			ofp.atom=build_item(toBuild,0,Once);
+			ofp.all_atom.push_back(ofp.atom);  
+			break;
+		}
+		case spot::op::And:{
+			ofp._op=spot::op::And;
+			ofp._left=new olg_formula_position(build_ofp(toBuild.operator[](0)));
+			ofp._right=new olg_formula_position(build_ofp(toBuild.all_but(0)));
+			for(int i=0;i<ofp._left->all_atom.size();i++){
+				ofp.all_atom.push_back(ofp._left->all_atom[i]);
+			}
+			for(int i=0;i<ofp._right->all_atom.size();i++){
+				ofp.all_atom.push_back(ofp._right->all_atom[i]);
+			}
+			break;
+		}
+		case spot::op::X:{
+			ofp=build_ofp(toBuild.operator[](0));
+		}
+	}
+	return ofp;
+}
+
+std::string olg_formula::to_ofp_string(olg_formula_position in){
+	std::string result="";
+	switch (in._op){
+		case spot::op::tt:{
+			result="True";
+			break;
+		}
+		case spot::op::ff:{
+			result="False";
+			break;
+		}
+		case spot::op::ap:{
+			result+=atom_to_string(in.atom);
+			break;
+		}
+		case spot::op::Not:{
+			result+="!"+atom_to_string(in.atom);
+			break;
+		}
+		case spot::op::And:{
+			result+="("+to_ofp_string(*in._left)+" & "+to_ofp_string(*in._right)+")";
+			break;
+		}
+		case spot::op::Or:{
+			result+="("+to_ofp_string(*in._left)+" | "+to_ofp_string(*in._right)+")";
+			break;
+		}
+	}
+	return result;
+}
+
+std::string olg_formula::atom_to_string(olg_item a){
+	std::string result="";
+	result+="< ";
+	result+=spot::str_psl(a.ap);
+
+	if(a.start<0) result+=", ⊥";
+	else result+=", "+std::to_string(a.start);
+	
+	if (a._freq == Once) result += ", −";
+	else if (a._freq == More) result += ", ≥";
+	else result += ", inf";
+
+	result += " >";
+	
+	return result;
+}
+
+bool olg_formula::unsat(){	
+}
 
 vector<std::string> olg_formula::split_formula(spot::formula toSplit){
 	vector<std::string> result;

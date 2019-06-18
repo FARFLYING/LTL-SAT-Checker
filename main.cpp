@@ -6,6 +6,15 @@
 #include <spot/tl/simplify.hh>
 #include "olg_check.h"
 
+spot::formula simplify(const spot::formula &f)
+{
+  static spot::tl_simplifier_options options(
+		  false,true,true,false,false,false,false,false,true);
+  static spot::tl_simplifier simplifier(options);
+  return simplifier.simplify(f);
+}
+
+
 int main()
 {
 	std::string input;
@@ -13,9 +22,9 @@ int main()
 	getline(std::cin,input);
 	spot::formula LTLformula=spot::parse_formula(input);
 
-	spot::tl_simplifier simp;
-	LTLformula=simp.simplify(LTLformula);
-	//print_psl(std::cout,LTLformula)<<"  --origin\n";
+	//spot::tl_simplifier simp;
+	LTLformula=simplify(LTLformula);
+	print_psl(std::cout,LTLformula)<<"  --origin\n";
 	
 	olg_check ch(LTLformula);
 	printf ("%s\n", ch.is_sat () ? "sat" : "unsat");	
@@ -28,5 +37,4 @@ int main()
 	
 	return 0;
 }
-
 

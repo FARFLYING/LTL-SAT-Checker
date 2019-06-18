@@ -6,8 +6,10 @@
 #include <vector>
 #include <spot/tl/print.hh>
 #include <spot/tl/parse.hh>
+#include <spot/tl/simplify.hh>
 #include <string>
 #include <fstream>
+#include <cstdlib>
 
 olg_check::timestamp olg_check::dfn;
 olg_check::timestamp olg_check::low;
@@ -44,8 +46,9 @@ void olg_check::init ()
 
 bool olg_check::is_sat(){
 	init();
-	spot::formula *classified=new spot::formula(trans_F_G(formula_check));
-	//print_psl(std::cout,*classified)<<" --classify\n";
+	spot::tl_simplifier simp;
+	spot::formula *classified=new spot::formula(simp.negative_normal_form(trans_F_G(formula_check)));
+	print_psl(std::cout,*classified)<<" --classify\n";
 	return check(classified);
 }
 
@@ -55,8 +58,10 @@ bool olg_check::check(spot::formula *u){
 	//spot::formula *u=new spot::formula(classified);   //std::cout<<"step d\n";
 	//spot::formula pre_u=spot::formula(*u);
 
-	dfn[u] = low[u] = _index++; //print_psl(std::cout,*u)<<" --u "<<_index<<"\n";
-	
+	dfn[u] = low[u] = _index++; print_psl(std::cout,*u)<<" --u "<<_index<<"\n";
+
+	//if(_index==6) std::exit(0);
+		
 	if(u->is_tt()){
 		_evidence = "true";
 		return true;
@@ -66,14 +71,15 @@ bool olg_check::check(spot::formula *u){
 	else{
         olg_formula olg(*u);
 		//bool is_olg_sat=olg.sat(); std::cout<<"4 "<<is_olg_sat<<"\n";
-		if(olg.sat()){
+		/*if(olg.sat()){
 			get_evidence();
 			return true;
-		}
+		}*/
+		olg.unsat();
 		
-		
+		/*
 		dnf_formula *dnf = dnf_formula(u).unique ();   // std::cout<<"step a\n";
-		//std::cout<<(*dnf).to_string().c_str()<<"\n";
+		std::cout<<(*dnf).to_string().c_str()<<"\n";
 
 		edge_set *es = new edge_set ();
   		_scc[dnf] = es;
@@ -123,21 +129,17 @@ bool olg_check::check(spot::formula *u){
               		timestamp::iterator v_it = low.find (v); //cout<<v_it->second<<" --4 v_it->second\n";
               		if (u_it->second > v_it->second)
                	 		u_it->second = v_it->second;
-					//std::cout<<"step 4\n";
 				}
 
-				//std::cout<<"low[u]:"<<low[u]<<" low[v]:"<<low[v]<<"\n";
 				if (low[u] == low[v]){
 					split2set (spot::op::And, dnf_arr[i].current, es);
 					if (u != v){
 						edge_set *next_edge = _scc[dnf_formula::get_dnf (v)];
 						for (eit = next_edge->begin (); eit != next_edge->end (); eit++)
 							es->insert (*eit);
-						//std::cout<<"step 5\n";
 					}
 					if(scc_sat (unique(u), es)){
 						spot::formula *aff = _states.back();
-						//spot::formula con_aff=spot::formula(*aff);
 						_states.pop_back();
 						std::vector<edge_set> path;
 						while(aff != v)
@@ -147,13 +149,11 @@ bool olg_check::check(spot::formula *u){
                   		}
 						generate_evidence(_path, path);
 						delete[] dnf_arr;
-						//std::cout<<"step 6\n";
                   		return true;
 					}
 				}
 			}
 			delete[] dnf_arr;
-			//std::cout<<"step 7\n";
 		}
 		
 		//spot::formula pre_v2=spot::formula(*v);
@@ -165,7 +165,7 @@ bool olg_check::check(spot::formula *u){
         	}while (v != u);
 		//std::cout<<"step 8\n";
 		}
-		return false;
+		return false;*/
 	}
 	return false;
 }
@@ -329,4 +329,6 @@ spot::formula olg_check::trans_F_G(spot::formula to_trans){
 		}
 		return spot::formula::And(temp);
 	}
+	else
+		return to_trans;
 }

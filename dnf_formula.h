@@ -17,7 +17,7 @@ class dnf_formula{
 		typedef hash_set<spot::formula *> next_set;
 		typedef hash_map<spot::formula *, dnf_formula *> af_dnf_map;
 		typedef hash_map<spot::formula *, dnf_clause_set *> dnf_map;
-
+	
 		dnf_formula(spot::formula *);
 		dnf_formula (const dnf_formula& orig);
 		void build();

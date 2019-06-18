@@ -37,6 +37,7 @@ void dnf_formula::build(){
 	}
 
 	switch(_id->kind()){
+
 		case spot::op::X:{
 			dnf_clause_set *dc_set = this->find_next ();
 			if (dc_set->empty ()){

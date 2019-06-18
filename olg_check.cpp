@@ -6,8 +6,10 @@
 #include <vector>
 #include <spot/tl/print.hh>
 #include <spot/tl/parse.hh>
+#include <spot/tl/simplify.hh>
 #include <string>
 #include <fstream>
+#include <cstdlib>
 
 olg_check::timestamp olg_check::dfn;
 olg_check::timestamp olg_check::low;
@@ -44,8 +46,9 @@ void olg_check::init ()
 
 bool olg_check::is_sat(){
 	init();
-	spot::formula *classified=new spot::formula(trans_F_G(formula_check));
-	//print_psl(std::cout,*classified)<<" --classify\n";
+	spot::tl_simplifier simp;
+	spot::formula *classified=new spot::formula(simp.negative_normal_form(trans_F_G(formula_check)));
+	print_psl(std::cout,*classified)<<" --classify\n";
 	return check(classified);
 }
 
@@ -55,8 +58,10 @@ bool olg_check::check(spot::formula *u){
 	//spot::formula *u=new spot::formula(classified);   //std::cout<<"step d\n";
 	//spot::formula pre_u=spot::formula(*u);
 
-	dfn[u] = low[u] = _index++; //print_psl(std::cout,*u)<<" --u "<<_index<<"\n";
-	
+	dfn[u] = low[u] = _index++; print_psl(std::cout,*u)<<" --u "<<_index<<"\n";
+
+	//if(_index==6) std::exit(0);
+		
 	if(u->is_tt()){
 		_evidence = "true";
 		return true;
@@ -66,14 +71,14 @@ bool olg_check::check(spot::formula *u){
 	else{
         olg_formula olg(*u);
 		//bool is_olg_sat=olg.sat(); std::cout<<"4 "<<is_olg_sat<<"\n";
-		if(olg.sat()){
+		/*if(olg.sat()){
 			get_evidence();
 			return true;
-		}
+		}*/
 		
-		
+		/*
 		dnf_formula *dnf = dnf_formula(u).unique ();   // std::cout<<"step a\n";
-		//std::cout<<(*dnf).to_string().c_str()<<"\n";
+		std::cout<<(*dnf).to_string().c_str()<<"\n";
 
 		edge_set *es = new edge_set ();
   		_scc[dnf] = es;
@@ -159,7 +164,7 @@ bool olg_check::check(spot::formula *u){
         	}while (v != u);
 		//std::cout<<"step 8\n";
 		}
-		return false;
+		return false;*/
 	}
 	return false;
 }
@@ -323,4 +328,6 @@ spot::formula olg_check::trans_F_G(spot::formula to_trans){
 		}
 		return spot::formula::And(temp);
 	}
+	else
+		return to_trans;
 }
