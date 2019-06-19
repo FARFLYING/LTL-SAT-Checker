@@ -45,6 +45,10 @@ class olg_formula{
 		olg_item build_item(spot::formula ap_name,int pos,freqkind freq);
 		std::string to_ofp_string(olg_formula_position);
 		std::string atom_to_string(olg_item);
+		void pos_X(olg_formula_position &);
+		void pos_U(olg_formula_position &);
+		void pos_R(olg_formula_position &);
+		void pos_Or(olg_formula_position &);
 };
 
 #endif

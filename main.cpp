@@ -23,7 +23,7 @@ int main()
 	spot::formula LTLformula=spot::parse_formula(input);
 
 	//spot::tl_simplifier simp;
-	LTLformula=simplify(LTLformula);
+	//LTLformula=simplify(LTLformula);
 	print_psl(std::cout,LTLformula)<<"  --origin\n";
 	
 	olg_check ch(LTLformula);

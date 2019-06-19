@@ -286,13 +286,47 @@ olg_formula_position olg_formula::build_ofp(spot::formula toBuild){
 		case spot::op::ap:{
 			ofp._op=spot::op::ap;  
 			ofp.atom=build_item(toBuild,0,Once);
-			ofp.all_atom.push_back(ofp.atom);  
+			ofp.all_atom.push_back(ofp.atom);  //cout<<atom_to_string(ofp.atom)<<"\n";  
 			break;
 		}
 		case spot::op::And:{
 			ofp._op=spot::op::And;
 			ofp._left=new olg_formula_position(build_ofp(toBuild.operator[](0)));
 			ofp._right=new olg_formula_position(build_ofp(toBuild.all_but(0)));
+			for(int i=0;i<ofp._left->all_atom.size();i++){
+				{ofp.all_atom.push_back(ofp._left->all_atom[i]); /*cout<<atom_to_string(ofp._left->all_atom[i])<<"  And\n";*/}
+			}
+			for(int i=0;i<ofp._right->all_atom.size();i++){
+				{ofp.all_atom.push_back(ofp._right->all_atom[i]); /*cout<<atom_to_string(ofp._right->all_atom[i])<<"  And\n";*/}
+			}
+			break;
+		}
+		case spot::op::Or:{
+			ofp._op=spot::op::Or;
+			bool flag=true;
+			olg_formula_position ofp1=build_ofp(toBuild.operator[](0));
+			olg_formula_position ofp2=build_ofp(toBuild.all_but(0));
+			std::vector<olg_item> temp_atoms;
+			for(int i=0;i<ofp1.all_atom.size();i++)
+				{temp_atoms.push_back(ofp1.all_atom[i]); /*cout<<atom_to_string(ofp1.all_atom[i])<<" Or\n";*/}
+			for(int i=0;i<ofp2.all_atom.size();i++)
+				{temp_atoms.push_back(ofp2.all_atom[i]); /*cout<<atom_to_string(ofp2.all_atom[i])<<" Or\n";*/}
+			for(int i=0;i<temp_atoms.size();i++){
+				if(temp_atoms[i].start!=temp_atoms[0].start){
+					flag=false; //cout<<"0\n";
+					break;
+				}
+			}
+			if(flag==true){
+				ofp._left=new olg_formula_position(ofp1);
+				ofp._right=new olg_formula_position(ofp2); //cout<<"1\n";
+			}
+			else{
+				pos_Or(ofp1);
+				pos_Or(ofp2);
+				ofp._left=new olg_formula_position(ofp1);
+				ofp._right=new olg_formula_position(ofp2);
+			}
 			for(int i=0;i<ofp._left->all_atom.size();i++){
 				ofp.all_atom.push_back(ofp._left->all_atom[i]);
 			}
@@ -303,9 +337,69 @@ olg_formula_position olg_formula::build_ofp(spot::formula toBuild){
 		}
 		case spot::op::X:{
 			ofp=build_ofp(toBuild.operator[](0));
+			pos_X(ofp);
+			break;
+		}
+		case spot::op::U:{
+			ofp=build_ofp(toBuild.operator[](1));
+			pos_U(ofp);   //cout<<to_ofp_string(ofp)<<"  --U\n";
+			break;
+		}
+		case spot::op::R:{	
+			ofp=build_ofp(toBuild.operator[](1));
+			if(toBuild.operator[](0).kind()==spot::op::ff){
+				pos_R(ofp);
+			}
+			break;
 		}
 	}
 	return ofp;
+}
+
+void olg_formula::pos_X(olg_formula_position &f){
+	if(f.atom.start>=0) f.atom.start+=1;
+	if(f._left!=NULL) pos_X(*f._left);
+	if(f._right!=NULL) pos_X(*f._right);
+	for(int i=0;i<f.all_atom.size();i++)
+		if(f.all_atom[i].start>=0) f.all_atom[i].start+=1;
+}
+
+void olg_formula::pos_U(olg_formula_position &f){
+	if(f.atom.start>=0) f.atom.start=-1;
+	if(f._left!=NULL) pos_U(*f._left);
+	if(f._right!=NULL) pos_U(*f._right);
+	for(int i=0;i<f.all_atom.size();i++)
+		if(f.all_atom[i].start>=0) f.all_atom[i].start=-1;;
+}
+
+void olg_formula::pos_R(olg_formula_position &f){
+	if(f.atom._freq==Once){
+		if(f.atom.start>=0)
+			f.atom._freq=More;
+		else
+			f.atom._freq=Inf;
+	}
+	if(f._left!=NULL) pos_R(*f._left);
+	if(f._right!=NULL) pos_R(*f._right);
+	for(int i=0;i<f.all_atom.size();i++){
+		if(f.all_atom[i]._freq==Once){
+		if(f.all_atom[i].start>=0)
+			f.all_atom[i]._freq=More;
+		else
+			f.all_atom[i]._freq=Inf;
+	}
+	}
+}
+
+void olg_formula::pos_Or(olg_formula_position &f){
+	f.atom.start=-1;
+	f.atom._freq=Once;
+	if(f._left!=NULL) pos_Or(*f._left);
+	if(f._right!=NULL) pos_Or(*f._right);
+	for(int i=0;i<f.all_atom.size();i++){
+		f.all_atom[i].start=-1;
+		f.all_atom[i]._freq=Once;
+	}
 }
 
 std::string olg_formula::to_ofp_string(olg_formula_position in){
