@@ -450,7 +450,142 @@ std::string olg_formula::atom_to_string(olg_item a){
 	return result;
 }
 
-bool olg_formula::unsat(){	
+bool olg_formula::unsat(){
+	//print_psl(std::cout,projection_i(ofp,0))<<"  --projection_i\n";
+	for(int i=0;i<ofp.all_atom.size();i++){
+		if(ofp.all_atom[i].start>=0){
+			if(!is_proj_sat(projection_i(ofp,ofp.all_atom[i].start)))
+				return true;		
+		}	
+	}
+	
+	std::vector<olg_item> S;
+	for(int i=0;i<ofp.all_atom.size();i++)
+		if(ofp.all_atom[i]._freq==More)
+			S.push_back(ofp.all_atom[i]); cout<<S.size()<<"\n";
+	
+	if(S.size()==0)
+		return false;
+
+	if(!is_proj_sat(projection_s(ofp,S)))
+		return true;
+	
+	/*std::vector<olg_item> S1;
+	for(int i=0;i<S.size();i++)
+		if(S[i].start==0)
+			S1.push_back(S[i]);  cout<<S1.size()<<"\n";
+	for(int i=0;i<ofp.all_atom.size();i++){
+		if(ofp.all_atom[i].start<0){
+			std::vector<olg_item> temp(S1);
+			temp.push_back(ofp.all_atom[i]);
+			if(!is_proj_sat(projection_s(ofp,temp)))
+				return true;
+		}
+	}
+
+	for(int i=0;i<ofp.all_atom.size();i++){
+		if(ofp.all_atom[i]._freq==Inf){
+			std::vector<olg_item> temp(S);
+			temp.push_back(ofp.all_atom[i]);
+			if(!is_proj_sat(projection_s(ofp,temp)))
+				return true;
+		}
+	}*/
+	
+	return false;
+}
+
+bool olg_formula::is_belong_S(olg_item l,std::vector<olg_item> S){
+	for(int i=0;i<S.size();i++){
+		if(l.ap==S[i].ap & l.start==S[i].start & l._freq==S[i]._freq)
+			return true;
+	}
+	return false;
+}
+
+spot::formula olg_formula::projection_s(olg_formula_position ofp,std::vector<olg_item> S){
+	spot::formula result;
+	switch(ofp._op){
+		case spot::op::ap:{
+			if(is_belong_S(ofp.atom,S))
+				result=ofp.atom.ap;
+			else
+				result=spot::formula::tt();
+			break;
+		}
+		case spot::op::Not:{
+			if(is_belong_S(ofp.atom,S))
+				result=spot::formula::Not(ofp.atom.ap);
+			else
+				result=spot::formula::tt();
+			break;
+		}
+		case spot::op::And:{
+			std::vector<spot::formula> temp;
+			temp.push_back(projection_s(*ofp._left,S));
+			temp.push_back(projection_s(*ofp._right,S));	
+			result=spot::formula::And(temp);
+			break;	
+		}
+		case spot::op::Or:{
+			std::vector<spot::formula> temp;
+			temp.push_back(projection_s(*ofp._left,S));
+			temp.push_back(projection_s(*ofp._right,S));	
+			result=spot::formula::Or(temp);
+			break;	
+		}
+	}
+	print_psl(std::cout,result)<<"  --projection_s\n";
+	return result;
+}
+
+bool olg_formula::is_proj_sat(spot::formula input){
+	write_dimacs(convert_to_CNF(input));
+	system("minisat cnf.dimacs out");
+	char buffer[100]; 
+	ifstream in("out");
+	in.getline(buffer,100); 
+	in.close();     
+	if(strcmp(buffer,"SAT")==0)
+		return true;
+	else
+		return false;
+}
+
+spot::formula olg_formula::projection_i(olg_formula_position ofp,int i){
+	spot::formula result;
+	switch(ofp._op){
+		case spot::op::ap:{
+			if((ofp.atom.start==i)|(ofp.atom.start<i && ofp.atom._freq==More))
+				result=ofp.atom.ap;
+			else
+				result=spot::formula::tt();
+			break;
+		}
+		case spot::op::Not:{
+			if((ofp.atom.start==i)|(ofp.atom.start<i && ofp.atom._freq==More))
+				result=spot::formula::Not(ofp.atom.ap);
+			else
+				result=spot::formula::tt();
+			break;
+		}
+		case spot::op::And:{
+			std::vector<spot::formula> temp;
+			temp.push_back(projection_i(*ofp._left,i));
+			temp.push_back(projection_i(*ofp._right,i));	
+			result=spot::formula::And(temp);
+			break;	
+		}
+		case spot::op::Or:{
+			std::vector<spot::formula> temp;
+			temp.push_back(projection_i(*ofp._left,i));
+			temp.push_back(projection_i(*ofp._right,i));	
+			result=spot::formula::Or(temp);
+			break;	
+		}
+	}
+	print_psl(std::cout,result)<<"  --projection_i\n";
+	return result;
 }
 
 vector<std::string> olg_formula::split_formula(spot::formula toSplit){

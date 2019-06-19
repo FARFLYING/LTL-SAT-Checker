@@ -49,6 +49,10 @@ class olg_formula{
 		void pos_U(olg_formula_position &);
 		void pos_R(olg_formula_position &);
 		void pos_Or(olg_formula_position &);
+		spot::formula projection_i(olg_formula_position,int);
+		bool is_proj_sat(spot::formula);
+		spot::formula projection_s(olg_formula_position,std::vector<olg_item>);
+		bool is_belong_S(olg_item,std::vector<olg_item>);
 };
 
 #endif

@@ -71,12 +71,13 @@ bool olg_check::check(spot::formula *u){
 	else{
         olg_formula olg(*u);
 		//bool is_olg_sat=olg.sat(); std::cout<<"4 "<<is_olg_sat<<"\n";
-		/*if(olg.sat()){
+		if(olg.sat()){
 			get_evidence();
 			return true;
-		}*/
+		}
+		if(olg.unsat())
+			return false;
 		
-		/*
 		dnf_formula *dnf = dnf_formula(u).unique ();   // std::cout<<"step a\n";
 		std::cout<<(*dnf).to_string().c_str()<<"\n";
 
@@ -164,7 +165,7 @@ bool olg_check::check(spot::formula *u){
         	}while (v != u);
 		//std::cout<<"step 8\n";
 		}
-		return false;*/
+		return false;
 	}
 	return false;
 }
