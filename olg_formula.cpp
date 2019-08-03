@@ -462,7 +462,7 @@ bool olg_formula::unsat(){
 	std::vector<olg_item> S;
 	for(int i=0;i<ofp.all_atom.size();i++)
 		if(ofp.all_atom[i]._freq==More)
-			S.push_back(ofp.all_atom[i]); cout<<S.size()<<"\n";
+			S.push_back(ofp.all_atom[i]); cout<<S.size()<<"  --S.size\n";
 	
 	if(S.size()==0)
 		return false;
@@ -470,18 +470,21 @@ bool olg_formula::unsat(){
 	if(!is_proj_sat(projection_s(ofp,S)))
 		return true;
 	
-	/*std::vector<olg_item> S1;
+	std::vector<olg_item> S1;
 	for(int i=0;i<S.size();i++)
 		if(S[i].start==0)
-			S1.push_back(S[i]);  cout<<S1.size()<<"\n";
-	for(int i=0;i<ofp.all_atom.size();i++){
-		if(ofp.all_atom[i].start<0){
-			std::vector<olg_item> temp(S1);
-			temp.push_back(ofp.all_atom[i]);
-			if(!is_proj_sat(projection_s(ofp,temp)))
-				return true;
+			S1.push_back(S[i]);  cout<<S1.size()<<"  S1.size\n";
+	if(S1.size()>0){
+		for(int i=0;i<ofp.all_atom.size();i++){
+			if(ofp.all_atom[i].start<0){
+				std::vector<olg_item> temp(S1);
+				temp.push_back(ofp.all_atom[i]);
+				if(!is_proj_sat(projection_s(ofp,temp)))
+					return true;
+			}
 		}
 	}
+
 
 	for(int i=0;i<ofp.all_atom.size();i++){
 		if(ofp.all_atom[i]._freq==Inf){
@@ -490,7 +493,7 @@ bool olg_formula::unsat(){
 			if(!is_proj_sat(projection_s(ofp,temp)))
 				return true;
 		}
-	}*/
+	}
 	
 	return false;
 }
@@ -555,6 +558,9 @@ bool olg_formula::is_proj_sat(spot::formula input){
 spot::formula olg_formula::projection_i(olg_formula_position ofp,int i){
 	spot::formula result;
 	switch(ofp._op){
+		case spot::op::tt:{
+			//TODO
+		}
 		case spot::op::ap:{
 			if((ofp.atom.start==i)|(ofp.atom.start<i && ofp.atom._freq==More))
 				result=ofp.atom.ap;
